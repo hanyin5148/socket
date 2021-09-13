@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	{
 		//keyboard input
 		char* retBuf = fgets(buf, sizeof(buf), stdin);
-		printf("Send the message from the server: ");
+		//printf("Send the message from the server: ");
 		if ( retBuf[0] == '\n' )
 		{
 			close(connfd);
