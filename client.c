@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	while(1){
 		//keyboard input
 		char* retBuf = fgets(buf, sizeof(buf), stdin);
-		printf("Send some message :");
+		//printf("Send some message :");
 		if (retBuf[0] == '\n')
 		{
 			printf("Close and exit \n");
