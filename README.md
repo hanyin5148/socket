@@ -6,7 +6,7 @@ test on rpi
 * The first one :serverv1.c & clientv1.c   
   >Forked from [browny/simple_socket_example.c](https://gist.github.com/browny/5211329)  
   >the server sends the data(date+time)   
-  +  Usage  
+  +  How to use on the command line
   >g++ serverv1.c -o serverv1  
   >g++ clientv1.c -o clientv1  
   >./serverv1  
@@ -16,7 +16,7 @@ test on rpi
 * The second one :server.c & client.c   
   >Modified by myself  
   >the server and the client can send the data to each other  
-  +  Usage  
+  +  How to use on the command line 
   >g++ -std=c++11 -pthread server.c -o server   
   >g++ -std=c++11 -pthread client.c -o client  
   >./server  
