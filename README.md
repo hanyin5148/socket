@@ -4,7 +4,7 @@ test on rpi
 * There are two versions server-client code  
 
 * The first one :serverv1.c & clientv1.c   
-  >Forked from browny/simple_socket_example.c  
+  >Forked from [browny/simple_socket_example.c](https://gist.github.com/browny/5211329.js"></script)  
   >the server sends the data(date+time)   
   +  Usage  
   >g++ serverv1.c -o serverv1  
