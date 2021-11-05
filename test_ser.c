@@ -1,33 +1,32 @@
-/*************************************************************************
-    > File Name: echoser.c
-    > Author: Simba
-    > Mail: dameng34@163.com
-    > Created Time: Fri 01 Mar 2013 06:15:27 PM CST
- ************************************************************************/
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <signal.h>
 
-#include<stdio.h>
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<unistd.h>
-#include<stdlib.h>
-#include<errno.h>
-#include<arpa/inet.h>
-#include<netinet/in.h>
-#include<string.h>
-#include<signal.h>
-
+#define PORT 5000
 #define ERR_EXIT(m) \
     do { \
         perror(m); \
         exit(EXIT_FAILURE); \
     } while (0)
 
-void do_service(int);
+void SERVER_RECV(int);
 
 int main(void)
 {
     signal(SIGCHLD, SIG_IGN);
-    int listenfd; //被动套接字(文件描述符），即只可以accept, 监听套接字
+    int listenfd; //only for accept
+	/* creates an UN-named socket inside the kernel and returns
+	 * an integer known as socket descriptor
+	 * This function takes domain/family as its first argument.
+	 * For Internet family of IPv4 addresses we use AF_INET
+	 */
     if ((listenfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
         //  listenfd = socket(AF_INET, SOCK_STREAM, 0)
         ERR_EXIT("socket error");
@@ -35,30 +34,40 @@ int main(void)
     struct sockaddr_in servaddr;
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(5000);
+    servaddr.sin_port = htons(PORT);
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    /* servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); */
-    /* inet_aton("127.0.0.1", &servaddr.sin_addr); */
+    
 
     int on = 1;
     if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
         ERR_EXIT("setsockopt error");
 
+	/* The call to the function "bind()" assigns the details specified
+	 * in the structure 'servaddr' to the socket created in the step above
+	 */
     if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
         ERR_EXIT("bind error");
 
-    if (listen(listenfd, SOMAXCONN) < 0) //listen应在socket和bind之后，而在accept之前
+	/* The call to the function "listen()" with second argument as 10 specifies
+	 * maximum number of client connections that server will queue for this listening
+	 * socket.
+	 */
+    if (listen(listenfd, SOMAXCONN) < 0) //listen should be after socket and bind, but before accept
         ERR_EXIT("listen error");
 
-    struct sockaddr_in peeraddr; //传出参数
-    socklen_t peerlen = sizeof(peeraddr); //传入传出参数，必须有初始值
-    int conn; // 已连接套接字(变为主动套接字，即可以主动connect)
+    struct sockaddr_in peeraddr; //output parameters
+    socklen_t peerlen = sizeof(peeraddr); //input/output parameters, must have an initial value
+    int conn; // can actively connect
 
     pid_t pid;
 
     while (1)
     {
-        if ((conn = accept(listenfd, (struct sockaddr *)&peeraddr, &peerlen)) < 0) //3次握手完成的序列
+		/* In the call to accept(), the server is put to sleep and when for an incoming
+		 * client request, the three way TCP handshake* is complete, the function accept()
+		 * wakes up and returns the socket descriptor representing the client socket.
+		 */
+        if ((conn = accept(listenfd, (struct sockaddr *)&peeraddr, &peerlen)) < 0) 
             ERR_EXIT("accept error");
         printf("recv connect ip=%s port=%d\n", inet_ntoa(peeraddr.sin_addr),
                ntohs(peeraddr.sin_port));
@@ -68,19 +77,19 @@ int main(void)
             ERR_EXIT("fork error");
         if (pid == 0)
         {
-            // 子进程
+            // Child process
             close(listenfd);
-            do_service(conn);
+            SERVER_RECV(conn);
             exit(EXIT_SUCCESS);
         }
         else
-            close(conn); //父进程
+            close(conn); //Parent process
     }
 
     return 0;
 }
 
-void do_service(int conn)
+void SERVER_RECV(int conn)
 {
     char recvbuf[1024];
     while (1)
@@ -99,7 +108,7 @@ void do_service(int conn)
 			break;
 		}
 
-		// 把收到的資料當作字串 後面補0 並印出
+		// Treat the received data as a string, add '\0' at the end and print it out
 		recvbuf[ret] = '\0';
 		printf("Recieved: %s\n", recvbuf);
 		
