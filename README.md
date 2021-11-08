@@ -1,4 +1,9 @@
 # socket
+Update (Look here)
+* Only need to compile the file test_ser.c
+* >g++ -std=c++11 -pthread test_ser.c -o server 
+
+
 test on rpi
 
 * There are two versions server-client code  
